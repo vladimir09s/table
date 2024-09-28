@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный Кабинет</title>
+    <style>
+        /* Стили для блока с партнерской ссылкой */
+        #rec796374454 {
+            font-size: 24px;                /* Размер шрифта */
+            font-family: inherit;           /* Шрифт сайта */
+            text-align: center;             /* Центрирование текста */
+            margin: 0 auto;                 /* Центрирование блока */
+            padding: 20px;                  /* Внутренние отступы */
+            max-width: 800px;               /* Максимальная ширина */
+            white-space: pre-wrap;          /* Перенос строк, как в вашем коде */
+        }
+        
+        /* Дополнительные стили для текста */
+        blockquote {
+            white-space: normal;            /* Обычное пространство для цитат */
+            border-left: 3px solid #333333; /* Линия слева у цитаты */
+            padding-left: 20px;             /* Отступ для цитаты */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Блок для вывода информации из AirTable -->
+    <div id="rec796374454" class="t-text">
+    </div>
+
+    <script>
+        // Функция для получения email из localStorage и рендеринга данных
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectId = parseInt(document.querySelector('#allrecords').dataset.tildaProjectId);
+            const lsUser = window.localStorage.getItem('tilda_members_profile' + projectId) || window.localStorage.getItem('memberarea_profile');
+            const profile = lsUser != null ? JSON.parse(lsUser) : {};
+            const userEmail = profile.login ? encodeURIComponent(profile.login) : false;
+            const tool_id = '6b857b4e-d91f-4e90-8c1a-e465677daafa'; // ID инструмента
+            const blockId = '#rec796374454'.substring(4); 
+            const container = document.getElementById('rec796374454'); // Контейнер для вывода данных
+
+            if (userEmail) {
+                // API Airtable (замените ваши данные)
+                const airtableApiKey = 'patjIQnwcHiomq7Ix.4a0ecf9c04b3a70e1de158e128f5f109b8276ed8d531420bf8f6f50854f04cc2';
+                const airtableBaseId = 'appolGzZod1npaVwL';
+                const airtableTableName = 'CRM';
+
+                // Запрос к API Airtable
+                fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableName}?filterByFormula={Email}='${userEmail}'`, {
+                    headers: {
+                        Authorization: `Bearer ${airtableApiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.records && data.records.length > 0) {
+                        const partnerLink = data.records[0].fields.Partner_link;
+
+                        // Пример использования Showdown для конвертации текста в HTML
+                        const showdownScript = document.createElement('script');
+                        showdownScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js';
+                        document.head.appendChild(showdownScript);
+
+                        showdownScript.onload = function() {
+                            const converter = new showdown.Converter();
+                            const textHtml = converter.makeHtml(partnerLink);
+
+                            // Устанавливаем отформатированный HTML в контейнер
+                            container.innerHTML = textHtml;
+
+                            // Применение стилей к цитатам
+                            container.querySelectorAll('blockquote').forEach(function(blockquote) {
+                                blockquote.style.whiteSpace = 'normal';
+                                blockquote.style.borderLeft = '3px solid #333333';
+                                blockquote.style.paddingLeft = '20px';
+                            });
+                        };
+                    } else {
+                        container.textContent = 'Информация о клиенте не найдена';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при запросе данных из Airtable:', error);
+                    container.textContent = 'Ошибка при получении данных';
+                });
+            } else {
+                container.textContent = 'Вы не авторизованы';
+            }
+        });
+    </script>
+
+</body>
+</html>
+
